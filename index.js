@@ -31,11 +31,25 @@ async function run() {
     const assignmentsCollection = client
       .db("assignmentDB")
       .collection("assignments");
+    const MyAttemptsCollection = client
+      .db("assignmentDB")
+      .collection("MyAttempts");
 
     app.get("/assignments", async (req, res) => {
       const result = await assignmentsCollection.find().toArray();
       res.send(result);
     });
+
+
+
+    app.get("/myattemps", async (req, res) => {
+      res.send(await MyAttemptsCollection.find().toArray());
+    });
+    app.post("/myattemps", async (req, res) => {
+      res.send(await MyAttemptsCollection.insertOne(req.body));
+    });
+
+
 
     app.post("/assignments", async (req, res) => {
       newAssignment = req.body;
@@ -44,43 +58,56 @@ async function run() {
       res.send(result);
     });
 
-
-
-// ORG
-    app.delete("/assignments/:id", async(req, res) => {
+    app.get("/assignments/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await assignmentsCollection.deleteOne(query);
-      res.send(result)
-    })
+      const query = { _id: new ObjectId(id) };
+      const result = await assignmentsCollection.findOne(query);
+      res.send(result);
+    });
 
+    app.put("/assignments/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateAssignment = req.body;
+      const updateDoc = {
+        $set: updateAssignment,
+      };
+      const result = await assignmentsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
 
-//     app.delete("/assignments/:id", async (req, res) => {
-//   const id = req.params.id;
-//   const requesterEmail = req.query.email;
+    // ORG
+    // app.delete("/assignments/:id", async(req, res) => {
+    //   const id = req.params.id;
+    //   const query = {_id: new ObjectId(id)}
+    //   const result = await assignmentsCollection.deleteOne(query);
+    //   res.send(result)
+    // })
 
-//   const assignment = await assignmentsCollection.findOne({ _id: new ObjectId(id) });
+    app.delete("/assignments/:id", async (req, res) => {
+      const id = req.params.id;
+      const requesterEmail = req.query.email;
 
-//   if (assignment?.createdBy !== requesterEmail) {
-//     return res.status(403).send({ error: "Forbidden: You can only delete your own assignments." });
-//   }
+      const assignment = await assignmentsCollection.findOne({
+        _id: new ObjectId(id),
+      });
 
-//   const result = await assignmentsCollection.deleteOne({ _id: new ObjectId(id) });
-//   res.send(result);
-// });
+      if (assignment?.createdBy !== requesterEmail) {
+        return res.status(403).send({
+          error: "Forbidden: You can only delete your own assignments.",
+        });
+      }
 
-
-    
-
-    
-
-
-
-
-
-
-
-
+      const result = await assignmentsCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
