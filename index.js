@@ -25,7 +25,9 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
+    // Connect the client to the server	(optional starting in v4.7) 
+
+    // ki bollen bujlam na
     await client.connect();
 
     const assignmentsCollection = client
@@ -41,14 +43,15 @@ async function run() {
     });
 
 
-
+//
     app.get("/myattemps", async (req, res) => {
       res.send(await MyAttemptsCollection.find().toArray());
     });
+
     app.post("/myattemps", async (req, res) => {
       res.send(await MyAttemptsCollection.insertOne(req.body));
     });
-
+// 
 
 
     app.post("/assignments", async (req, res) => {
